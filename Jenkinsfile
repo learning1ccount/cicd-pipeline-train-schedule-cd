@@ -11,5 +11,29 @@ pipeline {
 		archiveArtifacts artifacts: 'dist/trainSchedule.zip'
 		}
         }
+	stage('staging') {
+		when {
+			branch 'master'
+		}
+		steps {
+		echo "deployment to staging environment is in progress"
+		withCredentials([usernameColonPassword(credentialsId: 'webserver_login', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]){
+			sh '''
+				cp /dist/trainSchedule.zip /tmp
+
+			'''
+
+
+
+
+			}		
+		
+
+
+		}		
+
+
+		}
+
     }
 }
