@@ -19,7 +19,7 @@ pipeline {
 		echo "deployment to staging environment is in progress"
 		withCredentials([usernameColonPassword(credentialsId: 'webserver_login', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]){
 			sh '''
-				cp /dist/trainSchedule.zip /tmp
+				cp ./dist/trainSchedule.zip /tmp
 
 			'''
 
