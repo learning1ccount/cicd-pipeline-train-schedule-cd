@@ -1,39 +1,147 @@
 pipeline {
+
     agent any
+
     stages {
+
         stage('Build') {
-		when {
-			branch 'master'
-		}
+
             steps {
+
                 echo 'Running build automation'
+
                 sh './gradlew build --no-daemon'
-		archiveArtifacts artifacts: 'dist/trainSchedule.zip'
-		}
+
+                archiveArtifacts artifacts: 'dist/trainSchedule.zip'
+
+            }
+
         }
-	stage('staging') {
-		when {
-			branch 'master'
-		}
-		steps {
-		echo "deployment to staging environment is in progress"
-			withCredentials([usernamePassword(credentialsId: 'webserver_login', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]) {
-			sh '''
-				cp ./dist/trainSchedule.zip /tmp
 
-			'''
+        stage('DeployToStaging') {
 
+            when {
 
+                branch 'master'
 
+            }
 
-			}		
-		
+            steps {
 
+                withCredentials([usernamePassword(credentialsId: 'webserver_login', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]) {
 
-		}		
+                    sshPublisher(
 
+                        failOnError: true,
 
-		}
+                        continueOnError: false,
+
+                        publishers: [
+
+                            sshPublisherDesc(
+
+                                configName: 'staging',
+
+                                sshCredentials: [
+
+                                    username: "$USERNAME",
+
+                                    encryptedPassphrase: "$USERPASS"
+
+                                ], 
+
+                                transfers: [
+
+                                    sshTransfer(
+
+                                        sourceFiles: 'dist/trainSchedule.zip',
+
+                                        removePrefix: 'dist/',
+
+                                        remoteDirectory: '/tmp',
+
+                                        execCommand: 'sudo cp ./dist/trainSchedule.zip /tmp/'
+
+                                    )
+
+                                ]
+
+                            )
+
+                        ]
+
+                    )
+
+                }
+
+            }
+
+        }
+
+        stage('DeployToProduction') {
+
+            when {
+
+                branch 'master'
+
+            }
+
+            steps {
+
+                input 'Does the staging environment look OK?'
+
+                milestone(1)
+
+                withCredentials([usernamePassword(credentialsId: 'webserver_login', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]) {
+
+                    sshPublisher(
+
+                        failOnError: true,
+
+                        continueOnError: false,
+
+                        publishers: [
+
+                            sshPublisherDesc(
+
+                                configName: 'production',
+
+                                sshCredentials: [
+
+                                    username: "$USERNAME",
+
+                                    encryptedPassphrase: "$USERPASS"
+
+                                ], 
+
+                                transfers: [
+
+                                    sshTransfer(
+
+                                        sourceFiles: 'dist/trainSchedule.zip',
+
+                                        removePrefix: 'dist/',
+
+                                        remoteDirectory: '/tmp',
+
+                                        execCommand: 'sudo unzip /tmp/trainSchedule.zip'
+
+                                    )
+
+                                ]
+
+                            )
+
+                        ]
+
+                    )
+
+                }
+
+            }
+
+        }
 
     }
+
 }
