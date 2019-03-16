@@ -124,7 +124,7 @@ pipeline {
 
                                         remoteDirectory: '/tmp',
 
-                                        execCommand: 'sudo unzip /tmp/trainSchedule.zip'
+                                        execCommand: 'sudo unzip trainSchedule.zip'
 
                                     )
 
